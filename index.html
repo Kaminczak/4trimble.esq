@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KAMINCZAK // WC #25218944</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+
+:root {
+  --bg: #0a0e0a;
+  --bg-panel: #0d120d;
+  --green: #00ff41;
+  --green-dim: #00cc33;
+  --green-dark: #003b00;
+  --green-glow: rgba(0,255,65,0.15);
+  --green-glow-strong: rgba(0,255,65,0.3);
+  --amber: #ffb000;
+  --red: #ff3333;
+  --red-dim: #cc0000;
+  --cyan: #00e5ff;
+  --white: #c0ffc0;
+  --text: #b0e0b0;
+  --text-dim: #5a7a5a;
+  --border: #1a3a1a;
+  --border-bright: #00ff4140;
+  --section-bg: rgba(0,255,65,0.02);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { font-size: 22px; scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Share Tech Mono', monospace;
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* === SCANLINE OVERLAY === */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.06) 3px, rgba(0,0,0,0.06) 6px);
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* === LOCK SCREEN === */
+#lockScreen {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; flex-direction: column;
+}
+#lockScreen.hidden { display: none; }
+
+.lock-box {
+  border: 1px solid var(--green-dark);
+  background: var(--bg-panel);
+  padding: 2rem;
+  text-align: center;
+  max-width: 500px; width: 90%;
+  box-shadow: 0 0 60px rgba(0,255,65,0.05), inset 0 0 30px rgba(0,0,0,0.5);
+}
+.lock-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  color: var(--green);
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+  text-shadow: 0 0 20px var(--green-glow);
+}
+.lock-subtitle { color: var(--text-dim); font-size: 0.7rem; margin-bottom: 1.5rem; letter-spacing: 2px; }
+.lock-input {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--green);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  width: 100%;
+  text-align: center;
+  letter-spacing: 8px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+.lock-input:focus { border-color: var(--green-dim); box-shadow: 0 0 15px var(--green-glow); }
+.lock-input::placeholder { color: var(--text-dim); letter-spacing: 2px; font-size: 0.65rem; }
+.lock-btn {
+  margin-top: 0.7rem;
+  background: var(--green-dark);
+  border: 1px solid var(--green-dim);
+  color: var(--green);
+  font-family: 'Share Tech Mono', monospace;
+  padding: 0.5rem 1.5rem;
+  cursor: pointer;
+  letter-spacing: 3px;
+  font-size: 0.7rem;
+  transition: all 0.2s;
+}
+.lock-btn:hover { background: rgba(0,255,65,0.15); }
+.lock-error { color: var(--red); margin-top: 0.7rem; font-size: 0.65rem; min-height: 1rem; }
+.lock-hint { color: var(--text-dim); font-size: 0.55rem; margin-top: 1rem; opacity: 0.5; }
+
+/* === MAIN APP === */
+#mainApp { display: none; }
+#mainApp.visible { display: block; }
+
+/* === HEADER === */
+.header {
+  border-bottom: 1px solid var(--border);
+  padding: 0.7rem 1.2rem;
+  display: flex; justify-content: space-between; align-items: center;
+  background: linear-gradient(180deg, var(--bg-panel), var(--bg));
+  flex-wrap: wrap; gap: 0.5rem;
+}
+.header-left h1 {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.85rem;
+  color: var(--green);
+  letter-spacing: 4px;
+  text-shadow: 0 0 15px var(--green-glow);
+}
+.header-left .claim-num { color: var(--text-dim); font-size: 0.6rem; letter-spacing: 2px; margin-top: 0.1rem; }
+.header-right { text-align: right; }
+.header-right .brc-date {
+  color: var(--amber);
+  font-family: 'Orbitron', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+}
+.header-right .brc-info { color: var(--text-dim); font-size: 0.55rem; margin-top: 0.1rem; }
+
+/* === STATUS BAR === */
+.status-bar {
+  display: flex; gap: 0.8rem; padding: 0.5rem 1.2rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel);
+  flex-wrap: wrap;
+}
+.status-item { display: flex; align-items: center; gap: 0.3rem; font-size: 0.6rem; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.dot.green { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.dot.amber { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+.dot.red { background: var(--red); box-shadow: 0 0 6px var(--red); }
+
+/* === PACKAGE INDEX (ACCORDION NAV) === */
+.package-index {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 1rem 1.2rem;
+}
+.package-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.8rem;
+  color: var(--green);
+  letter-spacing: 3px;
+  text-align: center;
+  margin-bottom: 1rem;
+  text-shadow: 0 0 10px var(--green-glow);
+}
+
+/* === SECTION ACCORDION === */
+.section {
+  border: 1px solid var(--border);
+  margin-bottom: 0.4rem;
+  background: var(--bg-panel);
+  transition: all 0.3s;
+}
+.section:hover { border-color: var(--green-dark); }
+
+.section-header {
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.2s;
+  user-select: none;
+}
+.section-header:hover { background: rgba(0,255,65,0.04); }
+
+.section-num {
+  font-family: 'Orbitron', monospace;
+  color: var(--green-dim);
+  font-size: 0.65rem;
+  margin-right: 0.5rem;
+  min-width: 2rem;
+}
+.section-label {
+  color: var(--text);
+  font-size: 0.8rem;
+  flex: 1;
+  letter-spacing: 1px;
+}
+.section-status {
+  font-size: 0.6rem;
+  margin-left: 0.5rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 2px;
+}
+.section-status.done { color: var(--green); border: 1px solid var(--green-dark); }
+.section-status.pending { color: var(--amber); border: 1px solid rgba(255,176,0,0.3); }
+.section-status.critical { color: var(--red); background: rgba(255,51,51,0.1); border: 1px solid rgba(255,51,51,0.3); }
+
+.section-toggle {
+  color: var(--text-dim);
+  font-size: 0.7rem;
+  transition: transform 0.3s;
+  margin-left: 0.5rem;
+}
+.section.open .section-toggle { transform: rotate(90deg); }
+.section.open { border-color: var(--green-dim); }
+.section.open .section-header { background: rgba(0,255,65,0.05); }
+
+.section-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s ease, padding 0.3s ease;
+  padding: 0 1rem;
+}
+.section.open .section-body {
+  max-height: 50000px;
+  padding: 0.8rem 1rem 1rem;
+  border-top: 1px solid var(--border);
+}
+
+/* === CONTENT STYLES === */
+.section-body h3 {
+  color: var(--green-dim);
+  font-size: 0.75rem;
+  margin: 0.8rem 0 0.4rem;
+  letter-spacing: 1px;
+}
+.section-body h4 {
+  color: var(--amber);
+  font-size: 0.7rem;
+  margin: 0.7rem 0 0.3rem;
+}
+.section-body p { margin-bottom: 0.5rem; font-size: 0.77rem; }
+.section-body li { margin-bottom: 0.3rem; font-size: 0.75rem; }
+.section-body ul { list-style: none; padding-left: 0; }
+.section-body ul li::before { content: '> '; color: var(--green-dim); }
+
+.highlight { color: var(--green); font-weight: bold; }
+.danger { color: var(--red); }
+.warning { color: var(--amber); }
+.info { color: var(--cyan); }
+
+/* === TABLES === */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+  font-size: 0.7rem;
+}
+th {
+  background: var(--green-dark);
+  color: var(--green);
+  text-align: left;
+  padding: 0.4rem 0.5rem;
+  font-size: 0.6rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  border: 1px solid var(--border);
+}
+td {
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  vertical-align: top;
+}
+tr:hover { background: rgba(0,255,65,0.03); }
+.cell-new { color: var(--red); font-weight: bold; }
+.cell-absent { color: var(--text-dim); }
+.cell-present { color: var(--green); font-weight: bold; }
+
+/* === BLOCKQUOTE === */
+blockquote {
+  border-left: 3px solid var(--green-dim);
+  padding: 0.5rem 0.7rem;
+  margin: 0.5rem 0;
+  background: rgba(0,255,65,0.03);
+  font-style: italic;
+  color: var(--white);
+  font-size: 0.72rem;
+}
+
+/* === QUICK REF CARD === */
+.quick-ref {
+  border: 2px solid var(--green-dim);
+  padding: 0.8rem;
+  margin: 0.5rem 0;
+  background: rgba(0,255,65,0.02);
+  box-shadow: 0 0 20px var(--green-glow);
+}
+.quick-ref h3 {
+  color: var(--green);
+  margin-top: 0;
+  text-align: center;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.7rem;
+}
+
+/* === REBUTTAL SUB-ACCORDIONS === */
+.rebuttal {
+  border: 1px solid var(--border);
+  margin: 0.4rem 0;
+  background: var(--bg-panel);
+}
+.rebuttal-header {
+  background: var(--green-dark);
+  padding: 0.5rem 0.7rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.2s;
+}
+.rebuttal-header:hover { background: rgba(0,59,0,0.8); }
+.rebuttal-header .label { color: var(--green); font-size: 0.65rem; letter-spacing: 1px; }
+.rebuttal-header .toggle { color: var(--text-dim); font-size: 0.6rem; transition: transform 0.3s; }
+.rebuttal-body {
+  padding: 0; max-height: 0; overflow: hidden;
+  transition: max-height 0.4s ease, padding 0.3s ease;
+}
+.rebuttal.open .rebuttal-body { padding: 0.7rem; max-height: 3000px; }
+.rebuttal.open .toggle { transform: rotate(90deg); }
+
+.attack {
+  color: var(--red); padding: 0.4rem 0.6rem;
+  background: rgba(255,51,51,0.05);
+  border-left: 3px solid var(--red-dim);
+  margin-bottom: 0.4rem; font-size: 0.7rem;
+}
+.answer {
+  color: var(--white); padding: 0.4rem 0.6rem;
+  background: rgba(0,255,65,0.03);
+  border-left: 3px solid var(--green-dim);
+  font-size: 0.7rem;
+}
+.evidence-ref {
+  color: var(--cyan); font-size: 0.6rem;
+  margin-top: 0.4rem; padding-top: 0.4rem;
+  border-top: 1px solid var(--border);
+}
+
+/* === PDF DOWNLOAD BUTTON === */
+.pdf-download {
+  display: inline-flex;
+  align-items: center; gap: 0.3rem;
+  color: var(--cyan);
+  font-size: 0.6rem;
+  text-decoration: none;
+  padding: 0.25rem 0.6rem;
+  border: 1px solid rgba(0,229,255,0.2);
+  margin: 0.15rem 0.2rem 0.15rem 0;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.pdf-download:hover { background: rgba(0,229,255,0.1); border-color: var(--cyan); }
+.pdf-download.placeholder {
+  color: var(--text-dim);
+  border-color: var(--border);
+  cursor: default;
+  opacity: 0.5;
+}
+.pdf-links { margin-top: 0.5rem; }
+
+/* === AVATAR FLOATING BUTTON === */
+.avatar-fab {
+  position: fixed;
+  bottom: 1.5rem; left: 1.5rem;
+  height: 48px;
+  padding: 0 1rem 0 0.7rem;
+  border-radius: 24px;
+  background: var(--green-dark);
+  border: 2px solid var(--cyan);
+  color: var(--cyan);
+  font-size: 0.65rem;
+  font-family: 'Share Tech Mono', monospace;
+  cursor: pointer;
+  z-index: 900;
+  display: flex; align-items: center; gap: 0.4rem;
+  box-shadow: 0 0 20px rgba(0,229,255,0.15), 0 4px 15px rgba(0,0,0,0.5);
+  transition: all 0.3s;
+  letter-spacing: 1px;
+}
+.avatar-fab:hover { box-shadow: 0 0 35px rgba(0,229,255,0.3), 0 4px 20px rgba(0,0,0,0.6); transform: scale(1.1); }
+.avatar-fab.active { background: var(--cyan); color: var(--bg); }
+
+/* === AVATAR PANEL === */
+.avatar-panel {
+  position: fixed;
+  bottom: 5rem; left: 1.5rem;
+  width: 420px; height: 480px;
+  background: var(--bg);
+  border: 1px solid var(--cyan);
+  box-shadow: 0 0 40px rgba(0,229,255,0.15), 0 8px 30px rgba(0,0,0,0.8);
+  z-index: 899;
+  display: none;
+  flex-direction: column;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.avatar-panel.open { display: flex; }
+.avatar-panel-header {
+  background: rgba(0,229,255,0.1);
+  padding: 0.4rem 0.6rem;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+.avatar-panel-header span {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.5rem;
+  color: var(--cyan);
+  letter-spacing: 3px;
+}
+.avatar-panel-close {
+  background: none; border: none;
+  color: var(--text-dim); cursor: pointer;
+  font-size: 0.7rem; font-family: 'Share Tech Mono', monospace;
+}
+.avatar-panel-close:hover { color: var(--red); }
+.avatar-panel-body { flex: 1; overflow: hidden; }
+
+/* === AI TERMINAL FLOATING BUTTON === */
+.ai-fab {
+  position: fixed;
+  bottom: 1.5rem; right: 1.5rem;
+  height: 48px;
+  padding: 0 1rem 0 0.7rem;
+  border-radius: 24px;
+  background: var(--green-dark);
+  border: 2px solid var(--green-dim);
+  color: var(--green);
+  font-size: 0.65rem;
+  font-family: 'Share Tech Mono', monospace;
+  cursor: pointer;
+  z-index: 900;
+  display: flex; align-items: center; gap: 0.4rem;
+  box-shadow: 0 0 20px var(--green-glow), 0 4px 15px rgba(0,0,0,0.5);
+  transition: all 0.3s;
+  letter-spacing: 1px;
+}
+.ai-fab:hover { box-shadow: 0 0 35px var(--green-glow-strong), 0 4px 20px rgba(0,0,0,0.6); transform: scale(1.1); }
+.ai-fab.active { background: var(--green); color: var(--bg); }
+
+/* === AI TERMINAL POPUP === */
+.ai-terminal {
+  position: fixed;
+  bottom: 5rem; right: 1.5rem;
+  width: 420px; max-height: 500px;
+  background: var(--bg);
+  border: 1px solid var(--green-dim);
+  box-shadow: 0 0 40px var(--green-glow), 0 8px 30px rgba(0,0,0,0.8);
+  z-index: 899;
+  display: none;
+  flex-direction: column;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.ai-terminal.open { display: flex; }
+
+.ai-terminal-header {
+  background: var(--green-dark);
+  padding: 0.4rem 0.6rem;
+  display: flex; justify-content: space-between; align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+.ai-terminal-header span {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.5rem;
+  color: var(--green);
+  letter-spacing: 3px;
+}
+.ai-terminal-close {
+  background: none; border: none;
+  color: var(--text-dim); cursor: pointer;
+  font-size: 0.7rem; font-family: 'Share Tech Mono', monospace;
+}
+.ai-terminal-close:hover { color: var(--red); }
+
+.ai-terminal-output {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+  font-size: 0.6rem;
+  color: var(--text);
+  max-height: 350px;
+}
+.ai-terminal-output .ai-line { margin-bottom: 0.3rem; }
+.ai-terminal-output .ai-prompt { color: var(--green); }
+.ai-terminal-output .ai-response { color: var(--white); padding-left: 0.5rem; }
+
+.ai-terminal-input-row {
+  display: flex;
+  border-top: 1px solid var(--border);
+  background: var(--bg-panel);
+}
+.ai-terminal-input-row span {
+  color: var(--green);
+  padding: 0.4rem;
+  font-size: 0.6rem;
+}
+.ai-terminal-input {
+  flex: 1;
+  background: transparent;
+  border: none; outline: none;
+  color: var(--green);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.6rem;
+  padding: 0.4rem 0.3rem;
+}
+
+/* === FOOTER === */
+.footer {
+  padding: 0.7rem 1.2rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 0.5rem;
+  letter-spacing: 2px;
+}
+
+/* === RESPONSIVE === */
+@media (max-width: 768px) {
+  html { font-size: 18px; }
+  .header { flex-direction: column; }
+  .header-right { text-align: left; }
+  .ai-terminal { width: calc(100vw - 2rem); right: 1rem; bottom: 4.5rem; }
+  .ai-fab { width: 48px; height: 48px; font-size: 1rem; }
+  .avatar-panel { width: calc(100vw - 2rem); left: 1rem; bottom: 4.5rem; }
+  .avatar-fab { font-size: 0.55rem; height: 40px; }
+  .ai-fab { font-size: 0.55rem; height: 40px; }
+}
+
+/* === PRINT === */
+@media print {
+  body::before { display: none; }
+  #lockScreen, .ai-fab, .ai-terminal, .status-bar { display: none !important; }
+  .section-body { max-height: none !important; padding: 0.5rem 1rem !important; }
+  body { background: white; color: black; font-size: 12pt; }
+  h2, h3, .highlight { color: #000; text-shadow: none; }
+  table { border-color: #ccc; }
+  th { background: #eee; color: #000; }
+  .section { border-color: #ccc; page-break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<!-- ==================== LOCK SCREEN ==================== -->
+<div id="lockScreen">
+  <div class="lock-box">
+    <div class="lock-title">KAMINCZAK // EVIDENCE PORTAL</div>
+    <div class="lock-subtitle">DWC CLAIM #25218944</div>
+    <input type="text" id="passInput" class="lock-input" placeholder="ENTER CLAIM NUMBER" autofocus autocomplete="off" spellcheck="false">
+    <button class="lock-btn" onclick="tryUnlock()">UNLOCK</button>
+    <div class="lock-error" id="lockError"></div>
+    <div class="lock-hint">ATTORNEY-CLIENT PRIVILEGED</div>
+  </div>
+</div>
+
+<!-- ==================== MAIN APP ==================== -->
+<div id="mainApp">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <h1>KAMINCZAK // WC EVIDENCE</h1>
+      <div class="claim-num">DWC #25218944 &nbsp;|&nbsp; CARRIER #25F30M590202 &nbsp;|&nbsp; DOI: 01/30/2025</div>
+    </div>
+    <div class="header-right">
+      <div class="brc-date">BRC: FEB 26 2026 — 10:45 CT</div>
+      <div class="brc-info">ZOOM: 160 0970 1721 &nbsp;|&nbsp; PHONE: 551-285-1373</div>
+    </div>
+  </div>
+
+  <!-- STATUS BAR -->
+  <div class="status-bar">
+    <div class="status-item"><span class="dot green"></span> Rodriguez Letter — SIGNED</div>
+    <div class="status-item"><span class="dot green"></span> Feb 2026 MRI — RECEIVED</div>
+    <div class="status-item"><span class="dot green"></span> Trimble — RETAINED</div>
+    <div class="status-item"><span class="dot amber"></span> BRC Continuance — PENDING DWC</div>
+    <div class="status-item"><span class="dot red"></span> Khoury Letter — ABANDONED</div>
+  </div>
+
+  <!-- ==================== PACKAGE INDEX ==================== -->
+  <div class="package-index">
+    <div class="package-title">TRIMBLE BRC EVIDENCE PACKAGE</div>
+
+    <!-- ===== SECTION 01: COVER LETTER ===== -->
+    <div class="section" id="s01">
+      <div class="section-header" onclick="toggleSection('s01')">
+        <span class="section-num">01</span>
+        <span class="section-label">Cover Letter</span>
+        <span class="section-status done">READY</span>
+        <span class="section-toggle">▶</span>
+      </div>
+      <div class="section-body">
+        <p style="color:var(--text-dim);font-size:0.65rem;margin-bottom:0.8rem;">February 10, 2026 &nbsp;|&nbsp; Steve Kaminczak &nbsp;|&nbsp; 5740 San Felipe St., Apt. 627, Houston, TX 77057 &nbsp;|&nbsp; 979-436-5969 &nbsp;|&nbsp; kaminczak@gmail.com</p>
+        <p style="margin-bottom:0.5rem;"><strong>To:</strong> Larry Trimble, The Texas Law Spot &nbsp;|&nbsp; ltrimble@texaslawspot.com</p>
+        <p style="margin-bottom:0.8rem;"><strong>RE:</strong> <span class="highlight">Workers' Compensation Claim | DWC #25218944 | Carrier Claim #25F30M590202</span></p>
+
+        <p>Dear Mr. Trimble,</p>
+        <p style="margin-top:0.4rem;">I'm writing to follow up on our earlier conversation about my workers' compensation claim. You asked for the causation letter before making a decision. That letter is now signed and included in this packet. I want to give you the full picture of what you'd be working with, because this case is stronger than what I could explain over the phone.</p>
+
+        <p style="margin-top:0.4rem;">On <span class="highlight">January 30, 2025</span>, I tripped on a wet floor mat during a fire drill at Westbury High School and fell. The school nurse looked at me and sent me back to teach. No one filed an incident report. No one told me I had a workers' comp claim. I kept teaching in pain for five weeks until I collapsed on March 2 and was hospitalized at Memorial Hermann TMC.</p>
+
+        <p style="margin-top:0.4rem;">Here's what makes this case straightforward: my infectious disease doctor, Dr. Khoury, ordered an MRI on <span class="highlight">December 23, 2024</span> — exactly 38 days before the fall — to monitor a pre-existing osteomyelitis condition. That scan showed stable findings: lordosis maintained, L5 fracture at 20% height loss, no retrolisthesis, no edema. The <span class="highlight">March 3, 2025</span> MRI, taken one day after hospitalization, showed entirely new findings: retrolisthesis at L3-L4, fracture progression to 30%, and <span class="danger">acute bone marrow edema at L5</span>. Memorial Hermann coded the fracture as <span class="highlight">M48.56XA</span> — "initial encounter" — meaning the treating hospital classified this as a new injury. The carrier is denying the claim based on a 2020 CT scan while ignoring the December 2024 baseline that proves stability 38 days before the fall.</p>
+
+        <p style="margin-top:0.4rem;">I should be transparent about something: I have diagnosed amnesia, ADHD, and sleep disorders that have affected my cognition and organizational ability. I'm telling you this because I want you to understand both why it took me time to get this evidence organized and why I need competent representation. I am not in a position to handle a BRC on my own.</p>
+
+        <p style="margin-top:0.4rem;">HISD failed to file a DWC-1 for over a month after my January fall, which I documented through two DWC-154 complaints filed March 14, 2025 (PRI# 418963 and 418964). The DWC sent HISD an education letter on March 26, 2025 in response. I have a union attorney handling any employment-related matters separately. What I need is someone who knows workers' comp to handle the medical claim.</p>
+
+        <p style="margin-top:0.4rem;">My BRC is <span class="warning">February 26 at 10:45 AM</span>. I'm currently self-represented with assistance from OIEC Ombudsman Belinda Person. I believe the other firm has offered to cover your fees, but let me know if a retainer is necessary. This letter will accompany what I have managed to gather in a week using multiple LLM agents as paralegals. If it is all gobbledygook, I apologize.</p>
+
+        <p style="margin-top:0.4rem;">I know this is a lot. But the medical evidence is clean, the timeline is tight, and the carrier's defense doesn't survive the December baseline. I'd appreciate the chance to discuss it whenever you have time. Besides this BRC, which is my immediate focus, I am pretty sure I have a tight case for ADA missteps that have left me permanently both physically and mentally impaired, a cut and dry case of FMLA retaliation, and a textbook case for wrongful termination. But one bridge at a time.</p>
+
+        <p style="margin-top:0.8rem;">Respectfully,</p>
+        <p><span class="highlight">Steve Kaminczak</span> &nbsp;|&nbsp; 979-436-5969</p>
+
+        <h3 style="margin-top:1.2rem;">MRI COMPARISON: 38-DAY WINDOW</h3>
+        <table>
+          <tr><th>Clinical Finding</th><th>Baseline MRI<br>12/23/2024</th><th>Post-Injury MRI<br>03/03/2025</th><th>Significance</th></tr>
+          <tr><td>L3-L4 Alignment</td><td class="cell-absent">Lordosis maintained</td><td class="cell-new">Minimal retrolisthesis of L3 over L4</td><td class="danger">NEW INJURY</td></tr>
+          <tr><td>L5 Vertebral Height</td><td>~20% height loss (stable)</td><td class="cell-new">~30% height loss</td><td class="danger">AGGRAVATION</td></tr>
+          <tr><td>Bone Marrow Edema</td><td class="cell-absent">None reported</td><td class="cell-new">T1 hypointense / T2 hyperintense signal at L5</td><td class="danger">ACUTE TRAUMA</td></tr>
+          <tr><td>ICD-10 Coding</td><td>N/A (monitoring scan)</td><td class="cell-new">M48.56XA (initial encounter)</td><td class="danger">NEW DIAGNOSIS</td></tr>
+          <tr><td>Clinical Status</td><td>Working full duty</td><td class="cell-new">Hospitalized; disabled</td><td class="danger">CAUSAL LINK</td></tr>
+        </table>
+
+        <h3 style="margin-top:1rem;">CASE SUMMARY</h3>
+        <p><strong>DWC Claim #25218944 | Carrier Claim #25F30M590202 | DOI: 01/30/2025</strong></p>
+        <p style="margin-top:0.4rem;"><strong>Disputed Issue:</strong> Extent of injury. The carrier (CCMSI, self-insured HISD) contends all findings are pre-existing, relying on a 2020 CT scan. The carrier has not addressed the December 23, 2024 MRI baseline.</p>
+        <p style="margin-top:0.4rem;"><strong>Rebuttal:</strong> The December 23, 2024 MRI — ordered by Dr. Khoury (Infectious Disease) to monitor osteomyelitis — establishes a clean baseline 38 days before the injury. The retrolisthesis and bone marrow edema are new acute findings that appeared only after the fall. The carrier has not addressed this baseline.</p>
+
+        <h3 style="margin-top:1rem;">PROCEDURAL HISTORY</h3>
+        <table>
+          <tr><th>Date</th><th>Event</th></tr>
+          <tr><td>01/30/2025</td><td>Workplace fall at Westbury HS. No DWC-1 filed by employer.</td></tr>
+          <tr><td>03/02/2025</td><td>Claimant collapsed, hospitalized at Memorial Hermann TMC (admitted 03/02, discharged 03/07).</td></tr>
+          <tr><td>03/14/2025</td><td>DWC-154 complaints filed (PRI# 418963, 418964): employer failed to report injury.</td></tr>
+          <tr><td>12/16/2025</td><td>ClaimAssist (Memorial Hermann subclaimant) filed DWC-045 requesting BRC.</td></tr>
+          <tr><td>01/21/2026</td><td>BRC held; one-month continuance granted to gather evidence.</td></tr>
+          <tr><td class="warning">02/26/2026</td><td>Continued BRC scheduled, 10:45 AM. Currently self-represented with OIEC Ombudsman.</td></tr>
+        </table>
+
+        <h3 style="margin-top:1rem;">KEY CONTACTS</h3>
+        <table>
+          <tr><th>Role</th><th>Contact</th></tr>
+          <tr><td>Carrier</td><td>CCMSI (Houston ISD self-insured), PO Box 3309, Bellaire, TX 77402</td></tr>
+          <tr><td>Billing Agent</td><td>Ethos, novarebr@ethosrisk.com, 866-532-1929</td></tr>
+          <tr><td>OIEC Ombudsman</td><td>Belinda Person, belinda.person@oiec.texas.gov</td></tr>
+          <tr><td>PCP</td><td>Julio Rodriguez, rodriguezclinic2@gmail.com (causation letter SIGNED 2/13/26)</td></tr>
+          <tr><td>ID Specialist</td><td>Dr. Khoury, 832-410-1464 (ordered Dec 2024 baseline MRI — unavailable for follow-up)</td></tr>
+        </table>
+
+        <div class="pdf-links">
+          <a class="pdf-download" href="docs/Cover Letter.pdf" target="_blank">📄 Cover Letter (PDF)</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION 02: TIMELINE + 5-WEEK GAP ===== -->
+    <div class="section" id="s02">
+      <div class="section-header" onclick="toggleSection('s02')">
+        <span class="section-num">02</span>
+        <span class="section-label">Timeline + 5-Week Gap</span>
+        <span class="section-status done">READY</span>
+        <span class="section-toggle">▶</span>
+      </div>
+      <div class="section-body">
+
+        <h3>PRE-INJURY BASELINE</h3>
+        <table>
+          <tr><th>Date</th><th>Event</th><th>Evidence</th></tr>
+          <tr><td>Dec 11, 2020</td><td>Abdomen/pelvis CT scan (carrier's basis for "pre-existing")</td><td>Carrier records</td></tr>
+          <tr><td class="highlight">Dec 23, 2024</td><td><strong>BASELINE MRI</strong> — ordered by Dr. Khoury for osteomyelitis monitoring. Lordosis maintained, L5 fracture at 20%, <span class="cell-absent">NO retrolisthesis, NO edema</span></td><td>Section 03</td></tr>
+        </table>
+
+        <h3>INJURY EVENT</h3>
+        <table>
+          <tr><th>Date</th><th>Event</th><th>Evidence</th></tr>
+          <tr><td class="danger">Jan 30, 2025</td><td><strong>WORKPLACE FALL</strong> — Tripped on wet floor mat during fire drill at Westbury HS. School nurse examined, sent back to teach. No incident report filed. No DWC-1 filed.</td><td>No employer docs (DWC-154 addresses)</td></tr>
+          <tr><td>Feb 2025</td><td>Claimant continued teaching in pain for ~5 weeks. No treatment. Unaware of WC rights.</td><td>—</td></tr>
+        </table>
+
+        <h3>HOSPITALIZATION</h3>
+        <table>
+          <tr><th>Date</th><th>Event</th><th>Evidence</th></tr>
+          <tr><td>Mar 2, 2025</td><td>Collapsed at work. Admitted Memorial Hermann TMC.</td><td>Section 04</td></tr>
+          <tr><td class="highlight">Mar 3, 2025</td><td><strong>POST-FALL MRI</strong> — <span class="cell-new">NEW retrolisthesis L3-L4</span>, fracture to 30%, <span class="cell-new">ACUTE bone marrow edema L5</span>. ICD-10: M48.56XA (initial encounter = new injury).</td><td>Section 03</td></tr>
+          <tr><td>Mar 2-7, 2025</td><td>Hospitalized. Neurosurgery recommended L5 corpectomy + L3-pelvis fusion.</td><td>Section 04</td></tr>
+        </table>
+
+        <h3>THE 5-WEEK GAP</h3>
+        <p>Between <span class="highlight">January 30</span> (fall) and <span class="highlight">March 2</span> (hospitalization), claimant worked ~5 weeks with an untreated compression fracture.</p>
+        <ul>
+          <li><strong>Fracture progression:</strong> 20% → 30% height loss from continued weight-bearing</li>
+          <li><strong>Employer negligence:</strong> HISD filed no DWC-1, gave no WC rights notice, filed no incident report</li>
+          <li><strong>Misinformation:</strong> Verbally told at Memorial Hermann he could not file WC. Caught in closed-door loop between doctors and ombudsman.</li>
+        </ul>
+
+        <h3>HISD'S FAILURES DURING THE GAP</h3>
+        <table>
+          <tr><th>Obligation</th><th>What HISD Did</th></tr>
+          <tr><td>File DWC-1 within 8 days</td><td class="danger">Never filed</td></tr>
+          <tr><td>Inform employee of WC rights</td><td class="danger">Never informed</td></tr>
+          <tr><td>File incident report</td><td class="danger">Never filed</td></tr>
+          <tr><td>Respond to Dewart's 3/6/25 email</td><td class="danger">Never responded</td></tr>
+        </table>
+
+        <h3>REPORTING & PROCEDURAL HISTORY</h3>
+        <table>
+          <tr><th>Date</th><th>Event</th></tr>
+          <tr><td>Mar 14, 2025</td><td>Filed DWC-154 complaints (PRI# 418963, 418964)</td></tr>
+          <tr><td>Mar 26, 2025</td><td>DWC sent HISD "education letter"</td></tr>
+          <tr><td>Dec 16, 2025</td><td>ClaimAssist filed DWC-045 requesting BRC</td></tr>
+          <tr><td>Jan 21, 2026</td><td>BRC hearing — one-month continuance granted</td></tr>
+          <tr><td>Feb 11, 2026</td><td>New MRI at Memorial Diagnostic</td></tr>
+          <tr><td class="cell-present">Feb 13, 2026</td><td>Rodriguez causation letter SIGNED</td></tr>
+          <tr><td class="warning">Feb 26, 2026</td><td><strong>CONTINUED BRC — 10:45 AM CT</strong></td></tr>
+        </table>
+
+        <div class="pdf-links">
+          <a class="pdf-download" href="docs/Legal_Timeline.pdf" target="_blank">📄 Legal Timeline</a>
+          <a class="pdf-download" href="docs/Five_Week_Gap_Evidence_Summary.pdf" target="_blank">📄 5-Week Gap Summary</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION 03: MRI COMPARISON (SMOKING GUN) ===== -->
+    <div class="section" id="s03">
+      <div class="section-header" onclick="toggleSection('s03')">
+        <span class="section-num">03</span>
+        <span class="section-label">MRI Comparison — THE SMOKING GUN</span>
+        <span class="section-status critical">CRITICAL</span>
+        <span class="section-toggle">▶</span>
+      </div>
+      <div class="section-body">
+        <div class="quick-ref">
+          <h3>💎 THE 38-DAY WINDOW</h3>
+          <p>Two MRI scans bracket the January 30, 2025 fall by exactly <span class="highlight">38 days (before)</span> and <span class="highlight">32 days (after)</span>. The comparison proves new acute findings that can only be explained by the intervening fall.</p>
+        </div>
+
+        <h3>SIDE-BY-SIDE COMPARISON</h3>
+        <table>
+          <tr><th>Finding</th><th>Dec 23, 2024 (Pre-Fall)</th><th>Mar 3, 2025 (Post-Fall)</th><th>Change</th></tr>
+          <tr><td><strong>Lordosis</strong></td><td class="cell-present">Maintained</td><td>—</td><td>—</td></tr>
+          <tr><td><strong>L5 Height Loss</strong></td><td>20%</td><td>30%</td><td class="cell-new">+50% progression</td></tr>
+          <tr><td><strong>Retrolisthesis (L3-L4)</strong></td><td class="cell-absent">ABSENT</td><td class="cell-new">PRESENT</td><td class="cell-new">NEW finding</td></tr>
+          <tr><td><strong>Bone Marrow Edema (L5)</strong></td><td class="cell-absent">ABSENT</td><td class="cell-new">PRESENT (ACUTE)</td><td class="cell-new">NEW finding</td></tr>
+          <tr><td><strong>ICD-10 Code</strong></td><td class="cell-absent">—</td><td class="cell-new">M48.56XA</td><td class="cell-new">"Initial encounter" = NEW</td></tr>
+        </table>
+
+        <h3>WHY THIS MATTERS</h3>
+        <ul>
+          <li><span class="highlight">Bone marrow edema</span> = marker of ACUTE injury. Absent 38 days before, present 32 days after. No degenerative explanation exists.</li>
+          <li><span class="highlight">Retrolisthesis at L3-L4</span> — completely absent in December. Does not appear degeneratively in 38 days.</li>
+          <li><span class="highlight">Fracture progression</span> from 20% to 30% — additional traumatic compression consistent with fall.</li>
+          <li><span class="highlight">M48.56XA</span> — treating hospital classified this as a NEW injury event.</li>
+        </ul>
+
+        <div class="pdf-links">
+          <a class="pdf-download" href="docs/Dec2024_Baseline_MRI.PDF" target="_blank">📄 Dec 2024 Baseline MRI</a>
+          <a class="pdf-download" href="docs/Mar2025_PostFall_MRI.pdf" target="_blank">📄 Mar 2025 Post-Fall MRI</a>
+          <a class="pdf-download" href="docs/MRI_Comparison_Table.pdf" target="_blank">📄 Comparison Table</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION 04: MEDICAL EVIDENCE ===== -->
+    <div class="section" id="s04">
+      <div class="section-header" onclick="toggleSection('s04')">
+        <span class="section-num">04</span>
+        <span class="section-label">Medical Evidence</span>
+        <span class="section-status done">READY</span>
+        <span class="section-toggle">▶</span>
+      </div>
+      <div class="section-body">
+        <h3>HOSPITALIZATION — March 2-7, 2025</h3>
+        <p>Admitted Memorial Hermann TMC. ER Dr. Ryan Walsh documented: "during a fire drill, he fell." H&P documents BP 185/96 and positive straight leg test.</p>
+
+        <h3>SURGICAL RECOMMENDATION</h3>
+        <p>Neurosurgery (Dr. Benjamin Mouser + Dr. Jawad Khazaal) recommended <span class="highlight">L5 corpectomy + L3-to-pelvis fusion</span> on 3/4/25.</p>
+        <p>Steve did NOT refuse surgery — had no leave, no WC filed, couldn't afford 6-month recovery. Nurse Betsy M documented 3/7: <em>"Patient stated will lose his job and that he agrees to discharge."</em></p>
+
+        <h3>PICC LINE HISTORY</h3>
+        <p>Had PICC ~16 months for osteomyelitis. Pulled after OPAT cancelled due to Dr. Shah's misheard "street drugs" note + Steve's joke. Dr. Khoury replaced it the next day.</p>
+        <p>Pain management (Dr. Chad Zhao) did NOT flag drug-seeking — actually recommended increasing gabapentin.</p>
+
+        <h3>TOX SCREEN EVIDENCE</h3>
+        <table>
+          <tr><th>Date</th><th>Test</th><th>Result</th></tr>
+          <tr><td>Jan 24, 2025</td><td>Rapid Drug Screen</td><td class="cell-present">NEGATIVE</td></tr>
+          <tr><td>Mar 3-7, 2025</td><td>NO SCREEN PERFORMED</td><td class="cell-absent">—</td></tr>
+          <tr><td>Aug 26, 2025</td><td>Urine Drug Screen</td><td class="cell-present">NEGATIVE (opiates, fentanyl, oxycodone)</td></tr>
+        </table>
+        <p>Only opiates in system during March admission were <span class="highlight">HOSPITAL-ADMINISTERED</span>.</p>
+
+        <div class="pdf-links">
+          <a class="pdf-download" href="docs/Memorial_Hermann_AfterVisitSummary.PDF" target="_blank">📄 After Visit Summary</a>
+          <a class="pdf-download" href="docs/Memorial_Hermann_Hospital_Records.pdf" target="_blank">📄 Hospital Records</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION 05: DWC FILINGS ===== -->
+    <div class="section" id="s05">
+      <div class="section-header" onclick="toggleSection('s05')">
+        <span class="section-num">05</span>
+        <span class="section-label">DWC Filings</span>
+        <span class="section-status done">READY</span>
+        <span class="section-toggle">▶</span>
+      </div>
+      <div class="section-body">
+        <h3>COMPLAINTS (DWC-154)</h3>
+        <table>
+          <tr><th>PRI#</th><th>Subject</th><th>DWC Response</th></tr>
+          <tr><td>418963</td><td>Employer failed to report injury</td><td>Education letter sent to HISD 3/26/25</td></tr>
+          <tr><td>418964</td><td>Employer failed to inform of WC rights</td><td>Education letter sent to HISD 3/26/25</td></tr>
+        </table>
+        <p class="warning">⚠️ Use as timeline shield, not weapon. Don't oversell at BRC.</p>
+
+        <h3>BRC REQUEST (DWC-45)</h3>
+        <p>Filed by ClaimAssist (Memorial Hermann subclaimant) Dec 16, 2025. Requester: Gerard O'Neill Jr.</p>
+        <p><strong>DOI confirmed as 01/30/2025</strong> per this filing. Carrier tried to use 03/02/2025 (hospitalization, NOT the fall).</p>
+
+        <h3>CLAIM FILE REQUEST (DWC-153)</h3>
+        <p>Blank form ready. Ref: R028114-012926. Submit to CCRR@tdi.texas.gov.</p>
+
+        <div class="pdf-links">
+          <a class="pdf-download" href="docs/DWC-154_Complaint_PRI418963.pdf" target="_blank">📄 DWC-154 #418963</a>
+          <a class="pdf-download" href="docs/DWC-154_Complaint_PRI418964.pdf" target="_blank">📄 DWC-154 #418964</a>
+          <a class="pdf-download" href="docs/DWC-45_Subclaimant_Filing.pdf" target="_blank">📄 DWC-45 Filing</a>
+          <a class="pdf-download" href="docs/DWC-153_ClaimFile_Request.pdf" target="_blank">📄 DWC-153 Blank</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION 06: WITNESS STATEMENTS ===== -->
+    <div class="section" id="s06">
+      <div class="section-header" onclick="toggleSection('s06')">
+        <span class="section-num">06</span>
+        <span class="section-label">Witness Statements</span>
+        <span class="section-status done">READY</span>
+        <span class="section-toggle">▶</span>
+      </div>
+      <div class="section-body">
+        <h3>SETH DEWART — Email to HISD Admin, March 6, 2025</h3>
+        <p><strong>From:</strong> Seth.Dewart@houstonisd.org &rarr; <strong>To:</strong> William.Mader@houstonisd.org</p>
+        <p><strong>Subject:</strong> "Teacher fell Jan 30, 2025" &nbsp;|&nbsp; <strong>Date:</strong> March 6, 2025 at 9:51 AM</p>
+
+        <blockquote>On the day of the fire drill, January 30th, there was a dense throng of people leaving the 600s wing and B wing through the doors outside the Lecture Hall. I saw Steve Kaminczak in the crowd... I did not closely witness the fall, but did see him walking just before, then moments later on the ground — probably five to eight feet away. He was on the ground for more than a few seconds. Someone discussing it later said he must have tripped on a bunched up loose carpet mat... I am sure the doormat was there, because it was still bunched up after we came back inside.</blockquote>
+
+        <h4>EVIDENTIARY VALUE</h4>
+        <ul>
+          <li><span class="highlight">Confirms DOI: January 30, 2025</span> — third party to HISD admin</li>
+          <li>Confirms fire drill, time (~9:00-9:10 AM), and cause (loose carpet mat)</li>
+          <li>Confirms hazard persisted — mat still bunched when staff returned</li>
+          <li><span class="danger">HISD formally notified</span> — email TO William Mader 3/6/25. <span class="danger">Never responded.</span></li>
+          <li>Names additional witnesses: Canady, Officer Turner, Brooks, Sanders</li>
+        </ul>
+
+        <div class="pdf-links">
+          <a class="pdf-download" href="docs/Dewart_Witness_Statement.pdf" target="_blank">📄 Dewart Statement</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION 08: CAUSATION LETTERS ===== -->
+    <div class="section" id="s08">
+      <div class="section-header" onclick="toggleSection('s08')">
+        <span class="section-num">08</span>
+        <span class="section-label">Causation Letters</span>
+        <span class="section-status done">✓ SIGNED</span>
+        <span class="section-toggle">▶</span>
+      </div>
+      <div class="section-body">
+        <div class="quick-ref">
+          <h3>DR. RODRIGUEZ — ✅ SIGNED 2/13/2026</h3>
+          <p>Signed causation letter connecting the January 30, 2025 fall to acute findings on March 2025 MRI. Focuses on <span class="highlight">bone marrow edema</span> as proof of acute injury.</p>
+        </div>
+
+        <h4>GAP NOTE</h4>
+        <p>Signed letter does NOT mention height loss progression (20% → 30%). Nice-to-have addendum if Rodriguez is reachable:</p>
+        <blockquote>"The progression of L5 vertebral body height loss from approximately 20% to 30% between the December 2024 and March 2025 imaging is consistent with acute compression from the reported fall mechanism."</blockquote>
+        <p class="info">Nice-to-have, not a dealbreaker. Edema argument alone is strong.</p>
+
+        <h3>DR. KHOURY — ❌ ABANDONED</h3>
+        <p>Doctor unreachable. He ordered the Dec 2024 baseline MRI but is not available. Proceeding without.</p>
+
+        <h3>FEB 2026 MRI ANALYSIS</h3>
+        <p><strong>Date:</strong> 2/11/2026 &nbsp;|&nbsp; <strong>Radiologist:</strong> Henry Lee, MD &nbsp;|&nbsp; <span class="danger"><strong>Comparison: NONE</strong></span></p>
+
+        <h4>WHAT HELPS US</h4>
+        <ul>
+          <li><span class="highlight">Retrolisthesis and anterolisthesis PERSIST</span> — NOT on Dec 2024 baseline. First appeared March 2025.</li>
+          <li><span class="highlight">Right L4 pars defect PERSISTS</span></li>
+          <li>Severe foraminal stenoses with nerve root compression — still needs surgery</li>
+          <li><span class="highlight">Structural damage is permanent</span> at 13 months post-injury</li>
+        </ul>
+
+        <h4>WHAT CARRIER WILL USE</h4>
+        <ul>
+          <li><span class="danger">"No acute fracture"</span> — Expected at 13mo. Edema resolves. March 2025 captured acute phase.</li>
+          <li><span class="danger">"60% old anterior vertebral wedging"</span> — Radiologist had NO comparison.</li>
+          <li><span class="danger">"Comparison: None"</span> — Critical weakness.</li>
+        </ul>
+
+        <h4>3-MRI PROGRESSION COUNTER</h4>
+        <table>
+          <tr><th>Date</th><th>Findings</th></tr>
+          <tr><td>Dec 23, 2024</td><td>Stable. 20% L5 loss. <span class="cell-absent">NO retrolisthesis, NO edema</span></td></tr>
+          <tr><td>Mar 3, 2025</td><td><span class="cell-new">ACUTE edema</span>, retrolisthesis appears, M48.56XA</td></tr>
+          <tr><td>Feb 11, 2026</td><td>Structural damage persists. Acute inflammation resolved (expected at 13mo).</td></tr>
+        </table>
+
+        <h4>RECOMMENDATION FOR TRIMBLE</h4>
+        <ul>
+          <li>Do NOT lead with Feb 2026 MRI — lead with Dec 2024 vs March 2025</li>
+          <li>Use Feb 2026 to show ONGOING need for surgery</li>
+          <li>Pre-empt: "No acute fracture" at 13 months is expected, not exculpatory</li>
+        </ul>
+
+        <div class="pdf-links">
+          <a class="pdf-download" href="docs/Causation_Letter_Rodriguez_SIGNED.pdf" target="_blank">📄 Rodriguez Letter — SIGNED</a>
+          <a class="pdf-download" href="docs/2026-02-11_MRI_Lumbar_Results.pdf" target="_blank">📄 Feb 2026 MRI Report</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION 09: BRC REBUTTAL PREP ===== -->
+    <div class="section" id="s09">
+      <div class="section-header" onclick="toggleSection('s09')">
+        <span class="section-num">09</span>
+        <span class="section-label">BRC Rebuttal Prep (11 Rebuttals)</span>
+        <span class="section-status critical">KEEP OPEN AT HEARING</span>
+        <span class="section-toggle">▶</span>
+      </div>
+      <div class="section-body">
+        <p class="warning">⚠️ KEEP THIS SECTION OPEN DURING THE HEARING</p>
+        <p>Zoom: tdi-texas-gov.zoomgov.com → "Join Mediation" | ID: <span class="highlight">160 0970 1721</span> | Phone: 551-285-1373</p>
+
+        <div class="rebuttal" id="r1">
+          <div class="rebuttal-header" onclick="toggleRebuttal('r1')"><span class="label">1: "It's Pre-Existing"</span><span class="toggle">▶</span></div>
+          <div class="rebuttal-body">
+            <div class="attack"><strong>Attack:</strong> The L5 fracture was already there in December. Old problem.</div>
+            <div class="answer"><strong>Answer:</strong> "I had a stable, pre-existing L5 fracture in December at 20% height loss. The January 30 fall caused measurable acute worsening: height loss progressed to 30%, NEW bone marrow edema appeared, and NEW retrolisthesis at L3-L4 developed. None of these were present on the December baseline. A stable condition does not spontaneously produce acute edema in 38 days without trauma."</div>
+            <div class="evidence-ref">Evidence: MRI Comparison (Section 03), Rodriguez Letter (Section 08)</div>
+          </div>
+        </div>
+
+        <div class="rebuttal" id="r2">
+          <div class="rebuttal-header" onclick="toggleRebuttal('r2')"><span class="label">2: "ER Records Don't Mention the Fall"</span><span class="toggle">▶</span></div>
+          <div class="rebuttal-body">
+            <div class="attack"><strong>Attack:</strong> March ER intake doesn't connect to workplace injury.</div>
+            <div class="answer"><strong>Answer:</strong> "Page 1 of the Memorial Hermann After Visit Summary states: 'Patient endorses falling at his school.' The fall IS documented in the hospital record."</div>
+            <div class="evidence-ref">Evidence: Memorial_Hermann_AfterVisitSummary.PDF, Page 1</div>
+          </div>
+        </div>
+
+        <div class="rebuttal" id="r3a">
+          <div class="rebuttal-header" onclick="toggleRebuttal('r3a')"><span class="label">3A: "Why 5 Weeks to Seek Treatment?"</span><span class="toggle">▶</span></div>
+          <div class="rebuttal-body">
+            <div class="attack"><strong>Attack:</strong> If serious, you'd have gone immediately.</div>
+            <div class="answer"><strong>Answer:</strong> "HISD never filed a DWC-1, never informed me of my workers' comp rights, never documented the incident — despite the school nurse examining me that day. I didn't know I had a compensable injury. I kept teaching because nobody told me to stop. The 5-week delay caused the fracture to progress from 20% to 30% because I was weight-bearing on an untreated acute injury."</div>
+            <div class="evidence-ref">Evidence: Missing Evidence Log (05), DWC-154, Dewart statement (06)</div>
+          </div>
+        </div>
+
+        <div class="rebuttal" id="r3b">
+          <div class="rebuttal-header" onclick="toggleRebuttal('r3b')"><span class="label">3B: "Why No Follow-Up for 10 Months?"</span><span class="toggle">▶</span></div>
+          <div class="rebuttal-body">
+            <div class="attack"><strong>Attack:</strong> Hospitalized March, no treatment until Jan 2026.</div>
+            <div class="answer"><strong>Answer:</strong> 1. Misinformation — told verbally couldn't file WC. 2. Economic duress — teacher, lives alone, no savings, 3-month recovery impossible. 3. Thought case was dead — believed he'd lost after initial BRC. 4. Closed-door loop — back doctor said "use WC doctors," ombudsman said "use private insurance." DWC-154 complaints prove I was actively trying to get claim recognized.</div>
+            <div class="evidence-ref">Evidence: After Visit Summary p.2, DWC-154 complaints</div>
+          </div>
+        </div>
+
+        <div class="rebuttal" id="r4">
+          <div class="rebuttal-header" onclick="toggleRebuttal('r4')"><span class="label">4: "Already Wearing a Back Brace"</span><span class="toggle">▶</span></div>
+          <div class="rebuttal-body">
+            <div class="attack"><strong>Attack:</strong> Brace at fire drill = already injured.</div>
+            <div class="answer"><strong>Answer:</strong> "The brace was for a known, STABLE degenerative condition. December 2024 MRI confirms that baseline. Wearing a brace for a chronic condition does not prevent a new acute injury. Edema and retrolisthesis appeared AFTER the fall — the brace is irrelevant to those findings."</div>
+            <div class="evidence-ref">Evidence: Dec 2024 MRI (stable baseline), March 2025 MRI (acute changes)</div>
+          </div>
+        </div>
+
+        <div class="rebuttal" id="r5">
+          <div class="rebuttal-header" onclick="toggleRebuttal('r5')"><span class="label">5: "The Car Wreck Caused This"</span><span class="toggle">▶</span></div>
+          <div class="rebuttal-body">
+            <div class="attack"><strong>Attack:</strong> October 2025 car accident is the real cause.</div>
+            <div class="answer"><strong>Answer:</strong> "The March 2025 MRI documenting the acute injury was taken SEVEN MONTHS before the October car wreck. The damage was already documented. These are separate events."</div>
+            <div class="evidence-ref">Evidence: MRI date (3/3/25) vs. wreck (10/27/25)</div>
+          </div>
+        </div>
+
+        <div class="rebuttal" id="r6">
+          <div class="rebuttal-header" onclick="toggleRebuttal('r6')"><span class="label">6: "You're Not Credible — Memory Issues"</span><span class="toggle">▶</span></div>
+          <div class="rebuttal-body">
+            <div class="attack"><strong>Attack:</strong> Amnesia, date confusion. Testimony can't be trusted.</div>
+            <div class="answer"><strong>Answer:</strong> "I have documented memory issues from a subsequent head injury. That's why I'm relying on the medical imaging, hospital records, and witness statements rather than my own recollection. <span class="highlight">MRIs don't have amnesia.</span>"</div>
+            <div class="evidence-ref">Strategy: Point to documents, not memory. Every claim = specific exhibit.</div>
+          </div>
+        </div>
+
+        <div class="rebuttal" id="r7">
+          <div class="rebuttal-header" onclick="toggleRebuttal('r7')"><span class="label">7: "The Infection Caused the ER Visit"</span><span class="toggle">▶</span></div>
+          <div class="rebuttal-body">
+            <div class="attack"><strong>Attack:</strong> Chronic osteomyelitis. March ER was just an infection flare.</div>
+            <div class="answer"><strong>Answer:</strong> "The bone marrow edema, fracture progression, and new retrolisthesis are STRUCTURAL injuries from the fall — separate from the infection. The phlegmon is from osteomyelitis; the edema and collapse are from trauma."</div>
+            <p class="danger" style="margin-top:0.3rem"><strong>DO NOT</strong> try to link the phlegmon to the fall. Carrier's experts will know the difference.</p>
+            <div class="evidence-ref">Evidence: MRI Comparison, Hospital Records</div>
+          </div>
+        </div>
+
+        <div class="rebuttal" id="r8">
+          <div class="rebuttal-header" onclick="toggleRebuttal('r8')"><span class="label">8: "Why Two MRIs if Nothing Was Wrong?"</span><span class="toggle">▶</span></div>
+          <div class="rebuttal-body">
+            <div class="attack"><strong>Attack:</strong> MRIs in late 2024 = already a problem.</div>
+            <div class="answer"><strong>Answer:</strong> "ONE MRI in late 2024 — December 23, ordered by Dr. Khoury, my ID specialist, for routine osteomyelitis monitoring. It was NOT a back injury evaluation. That scan showed stable findings. The March MRI was during emergency hospitalization AFTER the fall."</div>
+            <div class="evidence-ref">Evidence: Dec 2024 MRI report (ordered by ID), March 2025 MRI (emergency)</div>
+          </div>
+        </div>
+
+        <div class="rebuttal" id="r9">
+          <div class="rebuttal-header" onclick="toggleRebuttal('r9')"><span class="label">9: "Retrolisthesis Is Degenerative"</span><span class="toggle">▶</span></div>
+          <div class="rebuttal-body">
+            <div class="attack"><strong>Attack:</strong> Retrolisthesis is wear-and-tear, not traumatic.</div>
+            <div class="answer"><strong>Answer:</strong> "December 2024 MRI says 'lordosis maintained' — no retrolisthesis. March 2025 shows retrolisthesis of L3 over L4. It appeared in 38 days. But more importantly — the acute bone marrow edema at L5 is the strongest evidence. Edema does NOT appear from degeneration. And Memorial Hermann coded M48.56XA — 'initial encounter' — classifying it as a new injury."</div>
+            <div class="evidence-ref">Evidence: MRI Comparison, Rodriguez Causation Letter</div>
+          </div>
+        </div>
+
+        <div class="rebuttal" id="r10">
+          <div class="rebuttal-header" onclick="toggleRebuttal('r10')"><span class="label">10: "Prior Attorney Dropped You"</span><span class="toggle">▶</span></div>
+          <div class="rebuttal-body">
+            <div class="attack"><strong>Attack:</strong> Already had an attorney who reviewed everything and dropped you.</div>
+            <div class="answer"><strong>Answer:</strong> "My prior attorney withdrew because she couldn't find a doctor willing to write a causation letter on her timeline — not because a doctor reviewed the evidence and refused. She also did not frame the argument around the December 2024 baseline as a clean 38-day comparison. I now have a signed causation letter from Dr. Rodriguez (2/13/2026). The evidence gap has been filled."</div>
+            <div class="evidence-ref">Evidence: Rodriguez Letter SIGNED (08), Prior Attorney File (10)</div>
+          </div>
+        </div>
+
+        <div class="rebuttal" id="r11">
+          <div class="rebuttal-header" onclick="toggleRebuttal('r11')"><span class="label">11: "DOI Confusion — 'Week Ago'"</span><span class="toggle">▶</span></div>
+          <div class="rebuttal-body">
+            <div class="attack"><strong>Attack:</strong> Hospital says fell "week ago" as of March 3. Dates don't match.</div>
+            <div class="answer"><strong>Answer:</strong> "I was in acute pain — H&P documents BP 185/96 and positive straight leg test. I was confused about timing. The official DOI on ALL filings — DWC-45, carrier claim, EOR — is January 30, 2025. The carrier has never disputed this date. Dewart's email corroborates late January. My confusion while in acute distress actually demonstrates how impaired I was."</div>
+            <div class="answer" style="margin-top:0.4rem;"><strong>Contributing factor:</strong> Claimant is edentulous (no natural teeth) and does not wear dentures to medical visits — a documented pattern across multiple hospital admissions (2018, 2023, 2024). Speaking without dentures while in acute pain significantly impairs communication clarity. The audio below demonstrates the difference:</div>
+            <div style="margin:0.5rem 0; padding:0.4rem; border:1px solid var(--border); background:var(--bg);">
+              <span style="color:var(--green);font-size:0.6rem;letter-spacing:1px;">🔊 AUDIO EXHIBIT — Speech With vs. Without Dentures</span><br>
+              <audio controls style="width:100%;margin-top:0.3rem;filter:hue-rotate(90deg);" preload="none">
+                <source src="docs/no-teeth.vs.teeth.wav" type="audio/wav">
+              </audio>
+            </div>
+            <div class="evidence-ref">Evidence: DWC-45, Carrier EOR, H&P (BP 185/96), Dewart email (3/6/25), nursing assessments (edentulous history)</div>
+          </div>
+        </div>
+
+        <div class="pdf-links">
+          <a class="pdf-download" href="docs/BRC_Rebuttal_Prep.pdf" target="_blank">📄 Full Rebuttal Prep</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SECTION 10: PRIOR ATTORNEY FILE + RECORD ERRORS + MISSING EVIDENCE + CONTACTS ===== -->
+    <div class="section" id="s10">
+      <div class="section-header" onclick="toggleSection('s10')">
+        <span class="section-num">10</span>
+        <span class="section-label">Prior Attorney File + Record Errors</span>
+        <span class="section-status done">READY</span>
+        <span class="section-toggle">▶</span>
+      </div>
+      <div class="section-body">
+        <h3>MEDICAL RECORDS ERRORS</h3>
+        <p><strong>Source:</strong> Memorial Hermann March 2025 records &nbsp;|&nbsp; <strong>Author:</strong> Dr. Bhrugesh Jogeshkumar Shah, MD</p>
+
+        <h4 class="danger">ERROR 1: "OxyContin from the Street"</h4>
+        <div class="attack"><strong>Record says:</strong> "Patient takes over OxyContin from the street for his pain."</div>
+        <div class="answer"><strong>Reality:</strong> Dr. Shah was older, English not his first language. Steve in severe pain without teeth — had to repeat himself. Doctor misheard. Steve has NO history of tobacco, alcohol, or drug use on file.</div>
+
+        <div style="background: #1a2332; border: 1px solid #3a7bd5; border-radius: 8px; padding: 16px; margin: 12px 0;">
+          <h4 style="margin: 0 0 8px 0; color: #3a7bd5;">🔊 Audio Demo: Speech Without Teeth vs. With Teeth</h4>
+          <p style="margin: 0 0 10px 0; font-size: 0.9em; color: #aaa;">Listen to how Steve sounds without teeth — this is what Dr. Shah was trying to understand.</p>
+          <audio controls style="width: 100%;">
+            <source src="docs/no-teeth.vs.teeth.wav" type="audio/wav">
+            Your browser does not support the audio element.
+          </audio>
+        </div>
+
+        <h4 class="danger">ERROR 2: "Getting Drugs by Himself"</h4>
+        <div class="attack"><strong>Record says:</strong> "Patient mentioned he would go get drugs by himself... seems this is not the first time he spoke about getting pain drugs from non-prescription sources."</div>
+        <div class="answer"><strong>Reality:</strong> Steve WAS joking about "calling my dealer" — admits this. But Error 1 (misheard statement) made staff take the joke seriously. One miscommunication + one bad joke = "pattern" that got OPAT cancelled.</div>
+
+        <div class="quick-ref">
+          <h3>ONE-LINER FOR TRIMBLE</h3>
+          <p>"No positive drug screen exists for illicit opiates. The only mention of 'street drugs' is a misheard comment. Jan and Aug 2025 drug screens were both negative."</p>
+        </div>
+
+        <h3>MISSING EVIDENCE LOG</h3>
+        <p>Items that <span class="danger">DON'T EXIST</span> — and why that matters:</p>
+        <ul>
+          <li><strong>Written WC Denial</strong> — DOES NOT EXIST. Claimant told verbally. No formal written denial ever issued.</li>
+          <li><strong>Mader Response to Dewart</strong> — DOES NOT EXIST. Dewart emailed 3/6/25. <span class="danger">Mader never responded.</span></li>
+          <li><strong>HISD Incident Report</strong> — DOES NOT EXIST. School nurse examined claimant after fall but no report created.</li>
+        </ul>
+
+        <h3>STILL NEEDED</h3>
+        <table>
+          <tr><th>Item</th><th>Status</th></tr>
+          <tr><td>Jan 30, 2025 incident report</td><td class="warning">May not exist (that's the point)</td></tr>
+          <tr><td>Dr. Zielinski private causation</td><td class="warning">Overdue — follow up</td></tr>
+          <tr><td>Payroll/AWW records (13 wks pre-injury)</td><td class="warning">For benefit calculation</td></tr>
+        </table>
+
+        <div class="pdf-links">
+          <a class="pdf-download" href="docs/Jennifer_CaseFile_303pg_Part1.pdf" target="_blank">📄 Prior Attorney File (Part 1)</a>
+          <a class="pdf-download" href="docs/Jennifer_CaseFile_303pg_Part2.pdf" target="_blank">📄 Prior Attorney File (Part 2)</a>
+          <a class="pdf-download" href="docs/Missing_Evidence_Log.pdf" target="_blank">📄 Missing Evidence Log</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CONTACTS (always visible at bottom) ===== -->
+    <div class="section" id="scontacts">
+      <div class="section-header" onclick="toggleSection('scontacts')">
+        <span class="section-num">⬡</span>
+        <span class="section-label">Key Contacts + Reference Numbers</span>
+        <span class="section-toggle">▶</span>
+      </div>
+      <div class="section-body">
+        <h3>CLAIMANT</h3>
+        <p><strong>Steve Kaminczak</strong> — 979-436-5969 — kaminczak@gmail.com</p>
+
+        <h3>LEGAL</h3>
+        <table>
+          <tr><th>Role</th><th>Name</th><th>Contact</th></tr>
+          <tr><td>WC Attorney</td><td>Larry Trimble</td><td>713.863.8600 (Amy = intake)</td></tr>
+          <tr><td>Union Rep</td><td>Sakis Brown</td><td>281-854-4062 / sbrown@hft2415.org</td></tr>
+          <tr><td>OIEC Ombudsman</td><td>Belinda Person</td><td>belinda.person@oiec.texas.gov</td></tr>
+        </table>
+
+        <h3>MEDICAL</h3>
+        <table>
+          <tr><th>Role</th><th>Name</th></tr>
+          <tr><td>PCP / Causation</td><td>Dr. Julio Rodriguez</td></tr>
+          <tr><td>ID Specialist</td><td>Dr. Khoury (unreachable)</td></tr>
+          <tr><td>Neurosurgery</td><td>Dr. Mouser / Dr. Khazaal</td></tr>
+          <tr><td>Radiologist (Feb 2026)</td><td>Dr. Henry Lee, MD</td></tr>
+        </table>
+
+        <h3>CARRIER</h3>
+        <table>
+          <tr><th>Role</th><th>Name</th></tr>
+          <tr><td>Carrier</td><td>CCMSI (HISD self-insured)</td></tr>
+          <tr><td>Billing Agent</td><td>Ethos</td></tr>
+          <tr><td>BRC Requester</td><td>Gerard O'Neill Jr (ClaimAssist)</td></tr>
+        </table>
+
+        <h3>REFERENCE NUMBERS</h3>
+        <table>
+          <tr><td>DWC Claim</td><td class="highlight">25218944</td></tr>
+          <tr><td>Carrier Claim</td><td>25F30M590202</td></tr>
+          <tr><td>Employee ID</td><td>00139923</td></tr>
+          <tr><td>DWC-154 PRI#</td><td>418963 / 418964</td></tr>
+          <tr><td>Tolling</td><td>TLC409008</td></tr>
+          <tr><td>BRC Zoom</td><td>160 0970 1721</td></tr>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- end package-index -->
+
+  <!-- AUDIO OVERVIEWS -->
+  <div style="margin:1.2rem auto;max-width:900px;padding:0.8rem 1rem;border:1px solid rgba(255,176,0,0.3);background:rgba(255,176,0,0.04);border-radius:4px;text-align:center;">
+    <div style="font-family:'Orbitron',monospace;font-size:0.6rem;color:var(--amber);letter-spacing:3px;margin-bottom:0.6rem;">🎵 AUDIO OVERVIEWS — AI-GENERATED CASE SUMMARIES</div>
+    <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
+      <div style="flex:1;min-width:250px;padding:0.5rem;border:1px solid rgba(255,176,0,0.15);background:rgba(0,0,0,0.3);text-align:left;">
+        <div style="color:var(--amber);font-size:0.65rem;margin-bottom:0.3rem;">Audio One: <span style="color:var(--white);">A Teacher's Three Fights</span></div>
+        <audio controls preload="none" style="width:100%;height:32px;filter:sepia(50%) hue-rotate(10deg) saturate(2);">
+          <source src="audiooverviews/A_Teachers_Three_Fights.mp4" type="audio/mp4">
+        </audio>
+      </div>
+      <div style="flex:1;min-width:250px;padding:0.5rem;border:1px solid rgba(255,176,0,0.15);background:rgba(0,0,0,0.3);text-align:left;">
+        <div style="color:var(--amber);font-size:0.65rem;margin-bottom:0.3rem;">Audio Two: <span style="color:var(--white);">Teaching With a Telescoping Spine</span></div>
+        <audio controls preload="none" style="width:100%;height:32px;filter:sepia(50%) hue-rotate(10deg) saturate(2);">
+          <source src="audiooverviews/Teaching_English_With_a_Telescoping_Spine.m4a" type="audio/mp4">
+        </audio>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">KAMINCZAK WC EVIDENCE PORTAL V3 &nbsp;|&nbsp; PREPARED FEB 2026 &nbsp;|&nbsp; ATTORNEY-CLIENT PRIVILEGED</div>
+
+</div><!-- end mainApp -->
+
+<!-- AVATAR FAB -->
+<button class="avatar-fab" id="avatarFab" onclick="toggleAvatar()" title="Ask the AI Doctor about this case">🎙 ASK THE DOCTOR</button>
+
+<!-- AVATAR PANEL -->
+<div class="avatar-panel" id="avatarPanel">
+  <div class="avatar-panel-header">
+    <span>AI AVATAR</span>
+    <button class="avatar-panel-close" onclick="toggleAvatar()">✕</button>
+  </div>
+  <div class="avatar-panel-body">
+    <iframe src="https://embed.liveavatar.com/v1/47fcd0a1-6b1d-4bee-9070-7f6c2acbed9e" allow="microphone" title="LiveAvatar Embed" style="width:100%;height:100%;border:none;"></iframe>
+  </div>
+</div>
+
+<!-- AI TERMINAL FAB -->
+<button class="ai-fab" id="aiFab" onclick="toggleAI()" title="Search case files by keyword">⚡ SEARCH FILES</button>
+
+<!-- AI TERMINAL POPUP -->
+<div class="ai-terminal" id="aiTerminal">
+  <div class="ai-terminal-header">
+    <span>AI TERMINAL</span>
+    <button class="ai-terminal-close" onclick="toggleAI()">✕</button>
+  </div>
+  <div class="ai-terminal-output" id="aiOutput">
+    <div class="ai-line"><span class="ai-prompt">&gt;</span> <span class="ai-response">Portal v3 loaded. Type a question about the case evidence.</span></div>
+    <div class="ai-line"><span class="ai-prompt">&gt;</span> <span class="ai-response">Try: "What's the smoking gun?" or "Rebuttal for pre-existing"</span></div>
+  </div>
+  <div class="ai-terminal-input-row">
+    <span>&gt;</span>
+    <input type="text" class="ai-terminal-input" id="aiInput" placeholder="Ask about the case..." autocomplete="off" spellcheck="false">
+  </div>
+</div>
+
+<script>
+// === PASSWORD LOCK ===
+const passInput = document.getElementById('passInput');
+const lockError = document.getElementById('lockError');
+
+function tryUnlock() {
+  if (passInput.value.trim() === '25218944') {
+    document.getElementById('lockScreen').classList.add('hidden');
+    document.getElementById('mainApp').classList.add('visible');
+  } else {
+    lockError.textContent = 'ACCESS DENIED';
+    passInput.value = '';
+    passInput.style.borderColor = 'var(--red)';
+    setTimeout(() => { lockError.textContent = ''; passInput.style.borderColor = 'var(--border)'; }, 2500);
+  }
+}
+passInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
+
+// === SECTION ACCORDIONS ===
+function toggleSection(id) {
+  const el = document.getElementById(id);
+  const wasOpen = el.classList.contains('open');
+  // Close all
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('open'));
+  // Toggle clicked
+  if (!wasOpen) el.classList.add('open');
+}
+
+// === REBUTTAL SUB-ACCORDIONS ===
+function toggleRebuttal(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+
+// === AI TERMINAL ===
+function toggleAI() {
+  const t = document.getElementById('aiTerminal');
+  const fab = document.getElementById('aiFab');
+  t.classList.toggle('open');
+  fab.classList.toggle('active');
+  if (t.classList.contains('open')) document.getElementById('aiInput').focus();
+}
+
+// === AVATAR PANEL ===
+function toggleAvatar() {
+  const p = document.getElementById('avatarPanel');
+  const fab = document.getElementById('avatarFab');
+  p.classList.toggle('open');
+  fab.classList.toggle('active');
+}
+
+// === AI LOCAL SEARCH ENGINE ===
+const KB = [
+  { keys: ['smoking gun', 'mri comparison', '38 day', 'edema', 'baseline'], answer: 'THE SMOKING GUN: Dec 23, 2024 MRI (38 days pre-fall) shows stable L5 at 20% loss, NO retrolisthesis, NO edema. Mar 3, 2025 MRI (32 days post-fall) shows 30% loss, NEW retrolisthesis L3-L4, ACUTE bone marrow edema L5. Coded M48.56XA = new injury. This 38-day window is the core of the case.' },
+  { keys: ['pre-existing', 'pre existing', 'old injury', 'already'], answer: 'REBUTTAL: "The December 2024 MRI is the clean baseline — 4 years newer than the 2020 CT they rely on. It shows stable findings. The fall caused measurable acute worsening: edema, retrolisthesis, and fracture progression. A stable condition does not produce acute edema in 38 days without trauma."' },
+  { keys: ['5 week', 'five week', 'gap', 'delay', 'why wait'], answer: 'THE 5-WEEK GAP: HISD never filed DWC-1, never informed Steve of WC rights, never documented the incident. He kept teaching because nobody told him to stop. Weight-bearing on untreated fracture caused progression from 20% to 30% height loss.' },
+  { keys: ['dewart', 'witness', 'fire drill'], answer: 'DEWART STATEMENT: Email to HISD admin Mader on 3/6/25 — confirms DOI Jan 30, confirms fire drill, confirms bunched floor mat near doors, confirms Steve was on the ground. Mader NEVER RESPONDED. Names additional witnesses: Canady, Turner, Brooks, Sanders.' },
+  { keys: ['rodriguez', 'causation', 'signed'], answer: 'DR. RODRIGUEZ: Causation letter SIGNED 2/13/2026. Connects Jan 30 fall to acute findings. Focuses on bone marrow edema as proof. Gap: does NOT mention height loss progression (20%→30%) — nice-to-have addendum, not dealbreaker.' },
+  { keys: ['khoury', 'abandoned'], answer: 'DR. KHOURY: ABANDONED. Ordered the Dec 2024 baseline MRI but is unreachable. Proceeding without his causation letter.' },
+  { keys: ['drug', 'oxycontin', 'street', 'shah', 'error', 'tox'], answer: 'RECORDS ERROR: Dr. Shah (3/4/25) misheard Steve and wrote "OxyContin from the street." Steve also joked about "calling my dealer." Combined = OPAT cancelled. BUT: Jan 24 and Aug 26 drug screens NEGATIVE. No positive screen exists. Only opiates in system were hospital-administered.' },
+  { keys: ['feb 2026 mri', 'new mri', 'henry lee', 'february mri', 'latest mri'], answer: 'FEB 2026 MRI: Structural damage PERSISTS (retrolisthesis, pars defect, stenosis). "No acute fracture" = expected at 13 months. CRITICAL: Radiologist had NO comparison imaging. Do NOT lead with this — lead with Dec 2024 vs March 2025. Use this to show ongoing need for surgery.' },
+  { keys: ['car', 'wreck', 'accident', 'october'], answer: 'CAR WRECK REBUTTAL: "The March 2025 MRI documenting the acute injury was taken SEVEN MONTHS before the October car wreck. The damage was already documented. These are separate events."' },
+  { keys: ['memory', 'credib', 'amnesia', 'trust'], answer: 'CREDIBILITY REBUTTAL: "I have documented memory issues from a subsequent head injury. That\'s why I rely on medical imaging, hospital records, and witness statements rather than recollection. MRIs don\'t have amnesia."' },
+  { keys: ['brace', 'wearing'], answer: 'BACK BRACE REBUTTAL: "The brace was for a known STABLE condition. December 2024 baseline confirms stability. A brace for chronic condition doesn\'t prevent acute injury from a fall. Edema and retrolisthesis appeared AFTER the fall."' },
+  { keys: ['infection', 'osteo', 'phlegmon'], answer: 'INFECTION REBUTTAL: "Bone marrow edema, fracture progression, and retrolisthesis are STRUCTURAL from the fall — separate from infection. DO NOT link the phlegmon to the fall. Carrier experts know the difference."' },
+  { keys: ['prior attorney', 'shanahan', 'dropped'], answer: 'PRIOR ATTORNEY: Jennifer Shanahan withdrew because she couldn\'t find a doctor on her timeline — NOT because evidence was reviewed and rejected. She did not frame the 38-day comparison argument. Rodriguez letter fills the gap.' },
+  { keys: ['doi', 'date of injury', 'week ago', 'date confusion'], answer: 'DOI REBUTTAL: "DOI on ALL filings = Jan 30, 2025. Carrier has never disputed this. ER \'week ago\' statement made while in acute distress (BP 185/96). Confusion about dates while impaired demonstrates severity, not inconsistency."' },
+  { keys: ['zoom', 'hearing', 'brc', 'call in'], answer: 'BRC HEARING: Feb 26, 2026 at 10:45 AM CT. Zoom: tdi-texas-gov.zoomgov.com → "Join Mediation" | Meeting ID: 160 0970 1721 | Phone: 551-285-1373' },
+  { keys: ['trimble', 'attorney', 'lawyer'], answer: 'ATTORNEY: Larry Trimble — said YES 2/13. Amy does intake. Phone: 713.863.8600. OIEC drops once official.' },
+  { keys: ['claim', 'number', 'reference'], answer: 'REFERENCE: DWC Claim #25218944 | Carrier #25F30M590202 | EID: 00139923 | DWC-154 PRI#: 418963/418964 | Tolling: TLC409008' },
+  { keys: ['missing', 'doesn\'t exist', 'no report'], answer: 'MISSING EVIDENCE: 1) Written WC denial — never issued. 2) Mader response to Dewart — never responded. 3) HISD incident report — never filed. Pattern of deliberate non-documentation.' },
+  { keys: ['eggshell', 'skull', 'aggravation'], answer: 'LEGAL THEORY: Aggravation of pre-existing condition. Texas "Eggshell Skull" rule: carrier responsible for worsening caused by work incident, regardless of pre-existing conditions. Stable baseline + acute changes = compensable aggravation.' },
+  { keys: ['surgery', 'corpectomy', 'fusion'], answer: 'SURGICAL NEED: Neurosurgery (Mouser + Khazaal) recommended L5 corpectomy + L3-to-pelvis fusion on 3/4/25. Steve couldn\'t afford 6-month recovery. Feb 2026 MRI confirms surgery still needed — structural damage is permanent.' }
+];
+
+document.getElementById('aiInput').addEventListener('keydown', function(e) {
+  if (e.key !== 'Enter' || !this.value.trim()) return;
+  const q = this.value.trim().toLowerCase();
+  const output = document.getElementById('aiOutput');
+  output.innerHTML += `<div class="ai-line"><span class="ai-prompt">&gt; ${this.value}</span></div>`;
+  this.value = '';
+
+  let best = null, bestScore = 0;
+  for (const item of KB) {
+    let score = 0;
+    for (const k of item.keys) {
+      if (q.includes(k)) score += 2;
+      else {
+        for (const word of k.split(' ')) {
+          if (q.includes(word) && word.length > 2) score++;
+        }
+      }
+    }
+    if (score > bestScore) { bestScore = score; best = item; }
+  }
+
+  const resp = bestScore > 0 ? best.answer : 'No match found. Try keywords like: smoking gun, pre-existing, 5-week gap, dewart, rodriguez, drug error, feb 2026 mri, car wreck, brace, credibility, surgery, zoom, contacts.';
+  output.innerHTML += `<div class="ai-line"><span class="ai-response">${resp}</span></div>`;
+  output.scrollTop = output.scrollHeight;
+});
+</script>
+</body>
+</html>
